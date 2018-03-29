@@ -131,9 +131,17 @@ bool MainWindow ::SerialUiInit(void)
     m_comboStopBits->addItem( FROMLOCAL("1") );
     m_comboStopBits->addItem( FROMLOCAL("2") );
 
+    m_labelFrame = new QLabel( this );
+    m_labelFrame->setGeometry( 520, 20, 60, 20);
+    m_labelFrame->setText( FROMLOCAL("帧延时(ms):") );
+
+    m_lineFrame = new QLineEdit( this );
+    m_lineFrame->setGeometry( 580, 20, 30, 20 );
+    m_lineFrame->setText( FROMLOCAL("10"));
+
     // 通断
     m_buttonLink = new QPushButton(this);
-    m_buttonLink->setGeometry( 520, 20, 50, 20 );
+    m_buttonLink->setGeometry( 620, 20, 50, 20 );
     m_buttonLink->setText( BUTTON_LINK );
     connect(m_buttonLink, SIGNAL(released()), this, SLOT(SlotButtonLinkReleased()));
 
@@ -206,6 +214,26 @@ void MainWindow ::SerialUiExit(void)
 
 /*******************************************************************************
  * 类:MainWindow
+ * 函数名:SerialUiSetEnabled
+ * 功能描述:设置串口控件是否可用
+ * 参数: bool b
+ * 被调用:
+ * 返回值:void
+ ******************************************************************************/
+void MainWindow ::SerialUiSetEnabled( bool b )
+{
+    m_comboPort->setEnabled( b );
+    m_comboBaudRate->setEnabled( b );
+    m_comboDataBits->setEnabled( b );
+    m_comboParity->setEnabled( b );
+    m_comboStopBits->setEnabled( b );
+    m_lineFrame->setEnabled(b);
+
+}   /*-------- end class MainWindow  method SerialUiSetEnabled -------- */
+
+
+/*******************************************************************************
+ * 类:MainWindow
  * 函数名:SlotButtonLinkReleased
  * 功能描述:连接与断开
  * 参数:void
@@ -218,11 +246,13 @@ void MainWindow ::SlotButtonLinkReleased(void)
     {
         m_buttonLink ->setText( BUTTON_UNLINK );
         m_Serial->Init( );
+        SerialUiSetEnabled( false );
     }
     else
     {
         m_buttonLink ->setText( BUTTON_LINK );
         m_Serial->Exit();
+        SerialUiSetEnabled( true );
     }
 }   /*-------- end class MainWindow              method SlotButtonLinkReleased -------- */
 
@@ -236,6 +266,35 @@ void MainWindow ::SlotButtonLinkReleased(void)
  ******************************************************************************/
 bool MainWindow ::DisplayUiInit(void)
 {
+    m_labelMode = new QLabel( this );
+    m_labelMode->setGeometry( 20, 50, 30, 20);
+    m_labelMode->setText( FROMLOCAL("显示:") );
+
+    m_comboMode = new QComboBox( this );
+    m_comboMode->setGeometry( 50, 50, 50, 20 );
+    m_comboMode->addItem( FROMLOCAL("全部") );
+    m_comboMode->addItem( FROMLOCAL("定制") );
+
+    m_boxTime = new QCheckBox( FROMLOCAL("时间"), this );
+    m_boxTime->setGeometry( 110, 50, 50, 20 );
+    m_boxTime->setChecked( true );
+
+    m_boxLen = new QCheckBox( FROMLOCAL("长度"), this );
+    m_boxLen->setGeometry( 160, 50, 50, 20 );
+    m_boxLen->setChecked( true );
+
+    m_boxHex = new QCheckBox( FROMLOCAL("16进制"), this );
+    m_boxHex->setGeometry( 210, 50, 60, 20 );
+    m_boxHex->setChecked( true );
+
+    m_boxPause = new QCheckBox( FROMLOCAL("暂停"), this );
+    m_boxPause->setGeometry( 270, 50, 50, 20 );
+
+    m_boxSave = new QCheckBox( FROMLOCAL("保存"), this );
+    m_boxSave->setGeometry( 320, 50, 50, 20 );
+    m_boxSave->setChecked( true );
+
+
     m_textDisplay = new QTextEdit( this );
     m_textDisplay->setGeometry(20, 80, 760, 500 );
     m_textDisplay->setReadOnly(true);
@@ -254,6 +313,45 @@ bool MainWindow ::DisplayUiInit(void)
  ******************************************************************************/
 void MainWindow ::DisplayUiExit(void)
 {
+    if( NULL != m_boxSave )
+    {
+        delete m_boxSave;
+        m_boxSave = NULL;
+    }
+    if( NULL != m_boxPause )
+    {
+        delete m_boxPause;
+        m_boxPause = NULL;
+    }
+
+    if( NULL != m_boxHex )
+    {
+        delete m_boxHex;
+        m_boxHex = NULL;
+    }
+    if( NULL != m_boxLen )
+    {
+        delete m_boxLen;
+        m_boxLen = NULL;
+    }
+
+    if( NULL != m_boxTime )
+    {
+        delete m_boxTime;
+        m_boxTime = NULL;
+    }
+
+    if( NULL != m_comboMode )
+    {
+        delete m_comboMode;
+        m_comboMode = NULL;
+    }
+    if( NULL != m_labelMode )
+    {
+        delete m_labelMode;
+        m_labelMode = NULL;
+    }
+
     if( NULL != m_textDisplay )
     {
         delete m_textDisplay;
@@ -275,8 +373,8 @@ bool MainWindow ::DataInit(void)
     m_Serial = new CSerial( (QMainWindow *)this );
     m_Display = new CDisplay( (QMainWindow *)this );
 
-    connect( this, SIGNAL(SignalReadData(QString)),
-             this, SLOT(SlotReadData(QString)));
+    connect( this, SIGNAL(SignalReadData(QByteArray)),
+             this, SLOT(SlotReadData(QByteArray)));
 
     return true;
 }   /*-------- end class MainWindow  method DataInit -------- */
@@ -291,8 +389,8 @@ bool MainWindow ::DataInit(void)
  ******************************************************************************/
 void MainWindow ::DataExit(void)
 {
-    disconnect( this, SIGNAL(SignalReadData(QString)),
-                this, SLOT(SlotReadData(QString)));
+    disconnect( this, SIGNAL(SignalReadData(QByteArray)),
+                this, SLOT(SlotReadData(QByteArray)));
     if( NULL != m_Display )
     {
         delete m_Display;
@@ -314,9 +412,11 @@ void MainWindow ::DataExit(void)
  * 被调用:
  * 返回值:void
  ******************************************************************************/
-void MainWindow ::SlotReadData(QString str )
+void MainWindow ::SlotReadData(QByteArray ba )
 {
-    QString display =  m_Display->Convert( str );
-
-    m_textDisplay->append( display );
+    QString display = m_Display->Convert( ba );
+    if ( !display.isEmpty() )
+    {
+        m_textDisplay->append( display );
+    }
 }   /*-------- end class MainWindow  method SlotReadData -------- */

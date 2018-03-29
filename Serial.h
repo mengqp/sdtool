@@ -18,7 +18,7 @@
 #include <QMainWindow>
 #include <QTimer>
 #include <QObject>
-#include "win_qextserialport.h"
+#include <QSerialPort>
 
 class MainWindow;
 
@@ -42,10 +42,10 @@ class CSerial : public QObject
 
     // 获取串口属性内容
     QString GetPort( void );
-    enum BaudRateType GetBaudRate( void );
-    enum DataBitsType GetDataBits( void );
-    enum ParityType GetParity( void );
-    enum StopBitsType GetStopBits( void );
+    enum QSerialPort::BaudRate GetBaudRate( void );
+    enum QSerialPort::DataBits  GetDataBits( void );
+    enum QSerialPort::Parity GetParity( void );
+    enum  QSerialPort::StopBits GetStopBits( void );
 
   private slots:
     // 接收串口数据
@@ -53,7 +53,7 @@ class CSerial : public QObject
 
   private:
     MainWindow *m_pMainWindow;
-    Win_QextSerialPort *m_Serial;
+    QSerialPort *m_Serial;
     QTimer *m_timerRead;
 
 

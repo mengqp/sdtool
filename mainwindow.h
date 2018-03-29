@@ -6,8 +6,10 @@
 #include <QComboBox>
 #include <QTextEdit>
 #include <QPushButton>
+#include <QCheckBox>
 #include "Serial.h"
 #include "Display.h"
+#include <QLineEdit>
 
 
 class MainWindow : public QMainWindow
@@ -27,6 +29,7 @@ class MainWindow : public QMainWindow
     // 串口界面
     bool SerialUiInit( void );
     void SerialUiExit( void );
+    void SerialUiSetEnabled( bool b );  // 设置串口上控件是否可用
 
     // 显示界面
     bool DisplayUiInit( void );
@@ -38,11 +41,11 @@ class MainWindow : public QMainWindow
     void DataExit( void );
 
   signals:
-    void SignalReadData(QString str);
+    void SignalReadData(QByteArray ba);
 
   private slots:
     void SlotButtonLinkReleased( void );
-    void SlotReadData(QString str);
+    void SlotReadData(QByteArray ba);
 
   public:
     // 串口窗口
@@ -65,12 +68,38 @@ class MainWindow : public QMainWindow
     QLabel *m_labelStopBits;
     QComboBox *m_comboStopBits;
 
-	//显示数据
-	QTextEdit *m_textDisplay;
+    // 帧延时
+    QLabel *m_labelFrame;
+    QLineEdit *m_lineFrame;
 
     // 连接断开
     QPushButton *m_buttonLink;
 
+  public:
+    // 模式 显示所有报文或是特定保文
+    QLabel *m_labelMode;
+    QComboBox *m_comboMode;
+
+    // 是不是显示时间
+    QCheckBox *m_boxTime;
+
+    // 是不是16进制显示
+    QCheckBox *m_boxLen;
+
+    // 是不是16进制显示
+    QCheckBox *m_boxHex;
+
+    // 暂停
+    QCheckBox *m_boxPause;
+
+    // 保存
+    QCheckBox *m_boxSave;
+
+	//显示数据
+	QTextEdit *m_textDisplay;
+
+
+  private:
     // 串口
     CSerial *m_Serial;
 

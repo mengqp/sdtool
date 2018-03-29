@@ -13,10 +13,15 @@
  ******************************************************************************/
 
 #include <QByteArray>
+#include <QTime>
+#include <QCoreApplication>
+#include <QDebug>
 
 #include "mainwindow.h"
 #include "Serial.h"
 #include "datatype.h"
+
+
 
 /*******************************************************************************
  * 功能描述:构造函数
@@ -35,7 +40,7 @@ CSerial::CSerial ( QMainWindow *pMainWindow )
  ******************************************************************************/
 CSerial::~CSerial (void)
 {
-
+    Exit();
 }   /*-------- end 析构函数 -------- */
 
 /*******************************************************************************
@@ -49,7 +54,9 @@ CSerial::~CSerial (void)
 bool CSerial::Init(void)
 {
     QString Port = GetPort();
-    m_Serial =  new Win_QextSerialPort(Port,QextSerialBase::Polling);
+    // m_Serial =  new Win_QextSerialPort(Port,QextSerialBase::Polling);
+    // m_Serial =  new QSerialPort(Port,QextSerialBase::Polling);
+    m_Serial =  new QSerialPort(Port);
 
     m_Serial ->open(QIODevice::ReadWrite);     //以读写方式打开串口
     if (!m_Serial->isOpen())
@@ -61,12 +68,13 @@ bool CSerial::Init(void)
     m_Serial->setDataBits( GetDataBits() );  //数据位设置，我们设置为8位数据位
     m_Serial->setParity( GetParity() );  //奇偶校验设置，我们设置为无校验
     m_Serial->setStopBits( GetStopBits() );  //停止位设置，我们设置为1位停止位
-    m_Serial->setFlowControl(FLOW_OFF);     //数据流控制设置，我们设置为无数据流控制
-    m_Serial->setTimeout(100);     //延时设置，我们设置为延时200ms,如果设置为500ms的话，会造成程序无响应，原因未知
+    m_Serial->setFlowControl( QSerialPort::NoFlowControl );    //数据流控制设置，我们设置为无数据流控制
+    // m_Serial->setTimeout(200);     //延时设置，我们设置为延时200ms,如果设置为500ms的话，会造成程序无响应，原因未知
 
     m_timerRead = new QTimer(this);      //设置读取计时器
-    m_timerRead->start(100);     //设置延时为100ms
+    m_timerRead->start(30);      //设置延时为100ms
     connect(m_timerRead,SIGNAL(timeout()),this,SLOT(SlotReadData()));
+    // connect(m_Serial, SIGNAL(readyRead()), this, SLOT(SlotReadData()));
 
     return true;
 }   /*-------- end class CSerial method Init -------- */
@@ -89,7 +97,9 @@ void CSerial::Exit(void)
     }
     if( NULL != m_Serial )
     {
-        if(m_Serial->isOpen())
+        m_Serial->clear();
+        // disconnect(m_Serial, SIGNAL(readyRead()), this, SLOT(SlotReadData()));
+        // if(m_Serial->isOpen())
         {
             m_Serial->close();
         }
@@ -123,7 +133,8 @@ QString CSerial::GetPort(void)
  * 被调用:Init
  * 返回值:enum BaudRateType
  ******************************************************************************/
-enum BaudRateType CSerial::GetBaudRate(void)
+// enum BaudRateType CSerial::GetBaudRate(void)
+enum QSerialPort::BaudRate CSerial::GetBaudRate(void)
 {
     bool ok;
     unsigned int uIndex = m_pMainWindow->m_comboBaudRate->currentText().toUInt( &ok, 10 );
@@ -131,44 +142,45 @@ enum BaudRateType CSerial::GetBaudRate(void)
     {
         case 1200: // 1200
             {
-                return BAUD1200;
+                return QSerialPort::Baud1200;
             }
             break;
 
         case 2400: // 2400
             {
-                return BAUD2400;
+                return QSerialPort::Baud2400;
             }
             break;
 
         case 4800: // 4800
             {
-                return BAUD4800;
+                return QSerialPort::Baud4800;
             }
             break;
 
         case 9600: // 9600
             {
-                return BAUD9600;
+                return QSerialPort::Baud9600;
             }
             break;
 
         case 19200: // 19200
             {
-                return BAUD19200;
+                return QSerialPort::Baud19200;
             }
             break;
 
         case 38400: // 38400
             {
-                return BAUD38400;
+                return QSerialPort::Baud38400;
             }
             break;
         default:
             break;
     }
 
-    return BAUD9600;
+    return QSerialPort::Baud9600;
+
 }   /*-------- end class CSerial method GetBaudRate -------- */
 
 /*******************************************************************************
@@ -179,7 +191,8 @@ enum BaudRateType CSerial::GetBaudRate(void)
  * 被调用:Init
  * 返回值:enum DataBitsType
  ******************************************************************************/
-enum DataBitsType CSerial::GetDataBits(void)
+// enum DataBitsType CSerial::GetDataBits(void)
+enum QSerialPort::DataBits CSerial::GetDataBits(void)
 {
     bool ok;
     unsigned int uIndex = m_pMainWindow->m_comboDataBits->currentText().toUInt( &ok, 10 );
@@ -188,27 +201,27 @@ enum DataBitsType CSerial::GetDataBits(void)
     {
         case 8:
             {
-                return DATA_8;
+                return QSerialPort::Data8;
             }
             break;
 
         case 7:
             {
-                return DATA_7;
+                return QSerialPort::Data7;
 
             }
             break;
 
         case 6:
             {
-                return DATA_6;
+                return QSerialPort::Data6;
 
             }
             break;
 
         case 5:
             {
-                return DATA_5;
+                return QSerialPort::Data5;
 
             }
             break;
@@ -216,7 +229,7 @@ enum DataBitsType CSerial::GetDataBits(void)
             break;
     }
 
-    return DATA_8;
+    return QSerialPort::Data8;
 }   /*-------- end class CSerial method GetDataBits -------- */
 
 /*******************************************************************************
@@ -227,7 +240,8 @@ enum DataBitsType CSerial::GetDataBits(void)
  * 被调用:Init
  * 返回值:enum ParityType
  ******************************************************************************/
-enum ParityType CSerial::GetParity(void)
+// enum ParityType CSerial::GetParity(void)
+enum QSerialPort::Parity CSerial::GetParity(void)
 {
     unsigned int uIndex = m_pMainWindow->m_comboStopBits->currentIndex();
 
@@ -235,26 +249,27 @@ enum ParityType CSerial::GetParity(void)
     {
         case 0: // 偶
             {
-                return PAR_EVEN;
+                return QSerialPort::EvenParity;
+                // return PAR_EVEN;
             }
             break;
 
         case 1: // 奇
             {
-                return PAR_ODD;
+                return QSerialPort::OddParity;
             }
             break;
 
         case 2: // 无
             {
-                return PAR_NONE;
+                return QSerialPort::NoParity;
             }
             break;
         default:
             break;
     }
 
-    return PAR_NONE;
+    return QSerialPort::EvenParity;
 }   /*-------- end class CSerial method GetParity -------- */
 
 /*******************************************************************************
@@ -265,7 +280,8 @@ enum ParityType CSerial::GetParity(void)
  * 被调用:Init
  * 返回值:enum StopBitsType
  ******************************************************************************/
-enum StopBitsType CSerial::GetStopBits(void)
+// enum StopBitsType CSerial::GetStopBits(void)
+enum  QSerialPort::StopBits CSerial::GetStopBits(void)
 {
     bool ok;
     unsigned int uIndex = m_pMainWindow->m_comboStopBits->currentText().toUInt( &ok, 10 );
@@ -274,13 +290,13 @@ enum StopBitsType CSerial::GetStopBits(void)
     {
         case 2:
             {
-                return STOP_2;
+                return QSerialPort::TwoStop;
             }
             break;
 
         case 1:
             {
-                return STOP_1;
+                return QSerialPort::OneStop;
 
             }
             break;
@@ -289,7 +305,8 @@ enum StopBitsType CSerial::GetStopBits(void)
             break;
     }
 
-    return STOP_1;
+    return QSerialPort::OneStop;
+
 }   /*-------- end class CSerial method GetStopBits() -------- */
 
 /*******************************************************************************
@@ -302,10 +319,48 @@ enum StopBitsType CSerial::GetStopBits(void)
  ******************************************************************************/
 void CSerial::SlotReadData (void)
 {
-    QByteArray temp = m_Serial->readAll();         //读取串口缓冲区的所有数据给临时变量temp
-    QString str(temp) ;
-    if( !str.isEmpty())
+    m_timerRead->stop();
+    QByteArray ba ;
+    bool ok;
+    ba.clear();
+
+    while( 1 )
     {
-        emit m_pMainWindow->SignalReadData( str );
+        // QByteArray temp = m_Serial->readAll();         //读取串口缓冲区的所有数据给临时变量temp
+        // QByteArray temp = m_Serial->readLine();        //读取串口缓冲区的所有数据给临时变量temp
+        // m_Serial->waitForReadyRead(200);                      //读取串口缓冲区的所有数据给临时变量temp
+        if ( NULL == m_Serial )
+        {
+            return;
+        }
+
+        QByteArray temp = m_Serial->readAll();                 //读取串口缓冲区的所有数据给临时变量temp
+        // qDebug() << temp.toHex();
+        if( !temp.isEmpty())
+        {
+            ba += temp;
+        }
+        else
+        {
+            if ( !ba.isEmpty())
+            {
+                emit m_pMainWindow->SignalReadData( ba );
+                m_timerRead->start(m_pMainWindow->m_lineFrame->text().toInt(&ok, 10));
+                return;
+            }
+        }
+
+        // 帧与帧之间的延时
+        QTime t;
+        t.start();
+        while(t.elapsed()< m_pMainWindow->m_lineFrame->text().toInt(&ok, 10))
+        {
+            QCoreApplication::processEvents();
+        }
+        // QEventLoop eventloop;
+        // QTimer::singleShot(100, &eventloop, SLOT(quit()));
+        // eventloop.exec();
+
     }
+
 }   /*-------- end class CSerial method SlotReadData -------- */

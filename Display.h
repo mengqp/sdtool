@@ -16,6 +16,9 @@
 #define DISPLAY_H
 
 #include <QMainWindow>
+#include <QByteArray>
+#include <QString>
+#include <QFile>
 class MainWindow;
 
 /*******************************************************************************
@@ -29,11 +32,34 @@ class CDisplay
     /* distructor */
     virtual ~CDisplay(void);
 
+  private:
+    // 数据
+    bool DataInit( void );
+    void DataExit( void );
+
   public:
-    QString Convert( QString str );
+    QString Convert( QByteArray ba );
+
+  private:
+    // 转化为16进岓
+    QString GetHex( char *buf, unsigned int len );
+    // 获取报文长度
+    QString GetLen( void );
+    // 获取时间
+    QString GetTime( void );
+    // 保存正常报文
+    bool SaveNormal( QString str );
+    // 保存定制报文
+    bool SavePrivate( QString str );
+
+    // 是否是定制报文
+    bool IsPrivateBuf( char *buf, unsigned int len );
+    // 获取错误报文
 
   private:
     MainWindow *m_pMainWindow;
+
+    QFile *m_pFileNormal,  *m_pFilePrivate;
 
 
 };
