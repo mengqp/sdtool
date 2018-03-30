@@ -15,7 +15,7 @@
 #include <QByteArray>
 #include <QTime>
 #include <QCoreApplication>
-#include <QDebug>
+// #include <QDebug>
 
 #include "mainwindow.h"
 #include "Serial.h"

@@ -15,6 +15,8 @@
 #include "mainwindow.h"
 #include <QTextStream>
 #include <QDateTime>
+// #include <QDebug>
+#include "datatype.h"
 
 /*******************************************************************************
  * 功能描述:构造函数
@@ -248,10 +250,14 @@ bool CDisplay::SavePrivate( QString str )
 bool CDisplay::IsPrivateBuf(char *buf , unsigned int len )
 {
     int init_len = 0;
+    char tmp[256];
     if ( len < 100 )
     {
         return false;
     }
+    // sprintf(tmp, "11111 %.2x %.2x %.2x %.2x\n",
+    //         buf[1], buf[2], buf[3],buf[4]);
+    // qDebug() << FROMLOCAL( tmp );
 
     if ( 0xa3 == (unsigned char)buf[1]
          && 0x20 == (unsigned char)buf[2]
@@ -261,6 +267,10 @@ bool CDisplay::IsPrivateBuf(char *buf , unsigned int len )
         init_len = buf[3] + 5;
     }
 
+    // sprintf(tmp, "22222int_len=%d %.2x %.2x %.2x %.2x\n", init_len,
+    //         buf[1+init_len], buf[2+init_len], buf[3+init_len],buf[4+init_len]);
+    // qDebug() << FROMLOCAL( tmp );
+
     if ( 0xa5 == (unsigned char)buf[1 + init_len]
          && 0x20 == (unsigned char)buf[2 + init_len]
          && 0x9f == (unsigned char)buf[3 + init_len]
@@ -268,8 +278,15 @@ bool CDisplay::IsPrivateBuf(char *buf , unsigned int len )
     {
         for (int i=0; i < 32; i++)
         {
-            unsigned int val = ( buf[35 + i + init_len ] << 8)
-                               | ( buf[36 + i + init_len]) ;
+
+            unsigned int val = ( (unsigned char)buf[35 + 2 * i + init_len ] << 8)
+                               | ( (unsigned char )buf[36 + 2 * i + init_len]) ;
+
+            // sprintf(tmp, "3333  i=%d   %.2x %.2x %u\n", i,
+            //         (unsigned char)buf[35 + 2 * i + init_len ] & 0xff,
+            //         (unsigned char)buf[36 + 2 * i + init_len] & 0xff, val);
+            // qDebug() << FROMLOCAL( tmp );
+
             if ( 10000 <= val )
             {
                 return true;
