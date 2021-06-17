@@ -274,6 +274,7 @@ bool MainWindow ::DisplayUiInit(void)
     m_comboMode->setGeometry( 50, 50, 50, 20 );
     m_comboMode->addItem( FROMLOCAL("全部") );
     m_comboMode->addItem( FROMLOCAL("定制") );
+    m_comboMode->addItem( FROMLOCAL("CRC") );
 
     m_boxTime = new QCheckBox( FROMLOCAL("时间"), this );
     m_boxTime->setGeometry( 110, 50, 50, 20 );

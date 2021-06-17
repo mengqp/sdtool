@@ -56,6 +56,10 @@ class CDisplay
     bool IsPrivateBuf( char *buf, unsigned int len );
     // 获取错误报文
 
+	// crc 报文
+	bool IsCrcBuf(char *buf , unsigned int len );
+	unsigned short GetCRC(unsigned char *buf, unsigned short len);
+
   private:
     MainWindow *m_pMainWindow;
 

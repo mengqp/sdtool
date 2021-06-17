@@ -345,10 +345,11 @@ void CSerial::SlotReadData (void)
             if ( !ba.isEmpty())
             {
                 emit m_pMainWindow->SignalReadData( ba );
-                m_timerRead->start(m_pMainWindow->m_lineFrame->text().toInt(&ok, 10));
-                return;
             }
-        }
+			// m_timerRead->start(m_pMainWindow->m_lineFrame->text().toInt(&ok, 10));
+			m_timerRead->start(5);
+			return;
+		}
 
         // 帧与帧之间的延时
         QTime t;
