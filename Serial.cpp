@@ -22,7 +22,6 @@
 #include "datatype.h"
 
 
-
 /*******************************************************************************
  * 功能描述:构造函数
  ******************************************************************************/
@@ -120,8 +119,10 @@ void CSerial::Exit(void)
  ******************************************************************************/
 QString CSerial::GetPort(void)
 {
-    unsigned int uIndex = m_pMainWindow->m_comboPort->currentIndex() + 1;
-    return (FROMLOCAL("COM") + QString::number( uIndex, 10) );
+    // unsigned int uIndex = m_pMainWindow->m_comboPort->currentIm_pMainWindow->m_comboPort->currentText()ndex() + 1;
+    // return (FROMLOCAL("COM") + QString::number( uIndex, 10) );
+
+    return m_pMainWindow->m_comboPort->currentText();
 }   /*-------- end class CSerial method GetPort -------- */
 
 

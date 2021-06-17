@@ -10,6 +10,7 @@
 #include "Serial.h"
 #include "Display.h"
 #include <QLineEdit>
+#include <QHBoxLayout>
 
 
 class MainWindow : public QMainWindow
@@ -39,6 +40,7 @@ class MainWindow : public QMainWindow
     // 数据初始化
     bool DataInit( void );
     void DataExit( void );
+    QStringList get_avail_sp_() ;
 
   signals:
     void SignalReadData(QByteArray ba);
@@ -75,6 +77,8 @@ class MainWindow : public QMainWindow
     // 连接断开
     QPushButton *m_buttonLink;
 
+	QHBoxLayout* m_playout_s;
+
   public:
     // 模式 显示所有报文或是特定保文
     QLabel *m_labelMode;
@@ -97,6 +101,9 @@ class MainWindow : public QMainWindow
 
 	//显示数据
 	QTextEdit *m_textDisplay;
+
+	QHBoxLayout* m_playout_o;
+
 
 
   private:

@@ -27,6 +27,9 @@ CDisplay::CDisplay(QMainWindow *pMainWindow)
         m_pMainWindow = (MainWindow *)pMainWindow;
     }
 
+    m_recv_head = 0;
+    m_recv_tail = 0;
+
     DataInit();
 
     // char buf[] = { 0x21, 0x03, 0x04, 0x06, 0x00, 0x16, 0x22, 0x25 };
@@ -319,44 +322,98 @@ unsigned short CDisplay::GetCRC(unsigned char *buf, unsigned short len)
 bool CDisplay::IsCrcBuf(char *buf, unsigned int len)
 {
     int base = 0;
-	int i = 0;
-	unsigned short crc;
-	if (NULL == buf || 2 >= len)
-        return false;
+    int i = 0;
+    unsigned char tmpbuf[1024];
+    unsigned int tmplen;
+    unsigned short crc;
 
-    while (buf[base] == 0x21 && buf[base + 1] == 0x03) {
-        for (i = 0; i < 1024; i++) {
-            if (base + i >= len) {
-                break;
-            }
-            if (i > 0) {
-                if (buf[base + i] == 0x21 && buf[base + i + 1] == 0x03)
-                    break;
-            }
-        }
-
-		printf("i=%d\n", i);
-        if (2 >= i)
-            return false;
-
-        base += i;
-        if (base > len)
-            return false;
-
-        crc = GetCRC((unsigned char *)buf + base - i, i - 2);
-
-
-        if ((crc & 0xff) != (unsigned char)buf[base - 2] ||
-            ((crc & 0xff00) >> 8) != (unsigned char)buf[base - 1])
-            return false;
-
-        if (base == len)
-            break;
+    for (i = 0; i < len; i++) {
+        m_recvbuf[m_recv_tail] = buf[i];
+        m_recv_tail++;
+        if (m_recv_tail >= MAX_RECV_LEN)
+            m_recv_tail = 0;
     }
 
-	// qDebug() << crc << (unsigned char)buf[base - 2]
-	// 		 << (unsigned char)buf[base - 1];
-	// unsigned short local =
+    while (m_recv_tail != m_recv_head) {
+        unsigned int recvlen =
+            (m_recv_tail + MAX_RECV_LEN - m_recv_head) % MAX_RECV_LEN;
+
+		tmplen =0;
+		memset(tmpbuf, 0 , 1024);
+
+        if (m_recvbuf[m_recv_head% MAX_RECV_LEN] == 0x21 &&
+            m_recvbuf[(m_recv_head + 1) % MAX_RECV_LEN] == 0x03) {
+            for (i = 0; i < 1024; i++) {
+                if (i >= recvlen) {
+					// 不判断最后一帧
+					return true;
+                }
+                if (i > 0) {
+                    if (m_recvbuf[(m_recv_head + i) % MAX_RECV_LEN] == 0x21 &&
+                        m_recvbuf[(m_recv_head + i + 1) % MAX_RECV_LEN] == 0x03) {
+                        tmplen = i;
+                        for (i = 0; i < tmplen; i++) {
+                            tmpbuf[i] = m_recvbuf[m_recv_head];
+                            m_recv_head++;
+                            if (m_recv_head >= MAX_RECV_LEN)
+                                m_recv_head = 0;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (2 >= tmplen)
+                return false;
+
+            crc = GetCRC((unsigned char *)tmpbuf, tmplen - 2);
+
+            if ((crc & 0xff) != (unsigned char)tmpbuf[tmplen - 2] ||
+                ((crc & 0xff00) >> 8) != (unsigned char)tmpbuf[tmplen - 1])
+                return false;
+        }
+        else {
+            m_recv_head++;
+            if (m_recv_head >= MAX_RECV_LEN)
+                m_recv_head = 0;
+        }
+
+        if (m_recv_head >= MAX_RECV_LEN)
+            m_recv_head = 0;
+    }
+
+    // while (m_recvbuf[base] == 0x21 && buf[base + 1] == 0x03) {
+    //     for (i = 0; i < 1024; i++) {
+    //         if (base + i >= len) {
+    //             break;
+    //         }
+    //         if (i > 0) {
+    //             if (buf[base + i] == 0x21 && buf[base + i + 1] == 0x03)
+    //                 break;
+    //         }
+    //     }
+
+    //     printf("i=%d\n", i);
+    //     if (2 >= i)
+    //         return false;
+
+    //     base += i;
+    //     if (base > len)
+    //         return false;
+
+    //     crc = GetCRC((unsigned char *)buf + base - i, i - 2);
+
+    //     if ((crc & 0xff) != (unsigned char)buf[base - 2] ||
+    //         ((crc & 0xff00) >> 8) != (unsigned char)buf[base - 1])
+    //         return false;
+
+    //     if (base == len)
+    //         break;
+    // }
+
+    // qDebug() << crc << (unsigned char)buf[base - 2]
+    // 		 << (unsigned char)buf[base - 1];
+    // unsigned short local =
     //     (unsigned short)((buf[len - 2] & 0xff) |
     //                      ((unsigned short)(buf[len - 1] << 8) & 0xff00));
 

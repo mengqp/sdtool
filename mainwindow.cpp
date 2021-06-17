@@ -3,6 +3,8 @@
 
 static QString BUTTON_LINK = FROMLOCAL("连接");
 static QString BUTTON_UNLINK = FROMLOCAL("断开");
+#include <QtSerialPort/QSerialPort>
+#include <QtSerialPort/QSerialPortInfo>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -83,9 +85,10 @@ bool MainWindow ::SerialUiInit(void)
 
     m_comboPort = new QComboBox( this );
     m_comboPort->setGeometry( 50, 20, 50, 20 );
-    for (int i=0; i < 20; i++)
+    QStringList list = get_avail_sp_();
+    for (int i=0; i < list.size(); i++)
     {
-        m_comboPort->addItem( QString::number( i + 1), 10 );
+        m_comboPort->addItem( list.at(i) );
     }
 
     m_labelBaudRate = new QLabel( this );
@@ -271,28 +274,28 @@ bool MainWindow ::DisplayUiInit(void)
     m_labelMode->setText( FROMLOCAL("显示:") );
 
     m_comboMode = new QComboBox( this );
-    m_comboMode->setGeometry( 50, 50, 50, 20 );
+    m_comboMode->setGeometry( 50, 50, 80, 20 );
     m_comboMode->addItem( FROMLOCAL("全部") );
     m_comboMode->addItem( FROMLOCAL("定制") );
-    m_comboMode->addItem( FROMLOCAL("CRC") );
+    m_comboMode->addItem( FROMLOCAL("CRC21") );
 
     m_boxTime = new QCheckBox( FROMLOCAL("时间"), this );
-    m_boxTime->setGeometry( 110, 50, 50, 20 );
+    m_boxTime->setGeometry( 140, 50, 50, 20 );
     m_boxTime->setChecked( true );
 
     m_boxLen = new QCheckBox( FROMLOCAL("长度"), this );
-    m_boxLen->setGeometry( 160, 50, 50, 20 );
+    m_boxLen->setGeometry( 210, 50, 50, 20 );
     m_boxLen->setChecked( true );
 
     m_boxHex = new QCheckBox( FROMLOCAL("16进制"), this );
-    m_boxHex->setGeometry( 210, 50, 60, 20 );
+    m_boxHex->setGeometry( 260, 50, 60, 20 );
     m_boxHex->setChecked( true );
 
     m_boxPause = new QCheckBox( FROMLOCAL("暂停"), this );
-    m_boxPause->setGeometry( 270, 50, 50, 20 );
+    m_boxPause->setGeometry( 320, 50, 50, 20 );
 
     m_boxSave = new QCheckBox( FROMLOCAL("保存"), this );
-    m_boxSave->setGeometry( 320, 50, 50, 20 );
+    m_boxSave->setGeometry( 370, 50, 50, 20 );
     m_boxSave->setChecked( true );
 
 
@@ -421,3 +424,21 @@ void MainWindow ::SlotReadData(QByteArray ba )
         m_textDisplay->append( display );
     }
 }   /*-------- end class MainWindow  method SlotReadData -------- */
+
+QStringList MainWindow::get_avail_sp_()
+{
+    QStringList list_avail_sp;
+
+    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
+    {
+        QSerialPort serial;
+        serial.setPort(info);
+        if (serial.open(QIODevice::ReadWrite))
+        {
+            list_avail_sp.append(serial.portName());
+            serial.close();
+        }
+    }
+
+    return list_avail_sp;
+}

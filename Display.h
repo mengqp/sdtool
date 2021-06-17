@@ -21,6 +21,8 @@
 #include <QFile>
 class MainWindow;
 
+#define  MAX_RECV_LEN  10240 /*  */
+
 /*******************************************************************************
  *功能描述:
  *******************************************************************************/
@@ -59,6 +61,12 @@ class CDisplay
 	// crc 报文
 	bool IsCrcBuf(char *buf , unsigned int len );
 	unsigned short GetCRC(unsigned char *buf, unsigned short len);
+
+private:
+	unsigned char m_recvbuf[MAX_RECV_LEN];
+	unsigned int m_recv_head;
+	unsigned int m_recv_tail;
+
 
   private:
     MainWindow *m_pMainWindow;
