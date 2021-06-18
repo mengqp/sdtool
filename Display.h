@@ -19,6 +19,8 @@
 #include <QByteArray>
 #include <QString>
 #include <QFile>
+#include <QDate>
+
 class MainWindow;
 
 #define  MAX_RECV_LEN  10240 /*  */
@@ -63,10 +65,17 @@ class CDisplay
 	unsigned short GetCRC(unsigned char *buf, unsigned short len);
 
 private:
+	bool OpenFiles();
+	void CloseFiles();
+
+private:
 	unsigned char m_recvbuf[MAX_RECV_LEN];
 	unsigned int m_recv_head;
 	unsigned int m_recv_tail;
 
+	QDate m_dayDate;
+	QString m_nfile;
+	QString m_efile;
 
   private:
     MainWindow *m_pMainWindow;

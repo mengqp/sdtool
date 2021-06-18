@@ -30,6 +30,9 @@ CDisplay::CDisplay(QMainWindow *pMainWindow)
     m_recv_head = 0;
     m_recv_tail = 0;
 
+	m_dayDate = QDate::currentDate();
+	m_nfile = m_dayDate.toString("yyyy-MM-dd_") + "normal.txt";
+	m_efile = m_dayDate.toString("yyyy-MM-dd_") + "error.txt";
     DataInit();
 
     // char buf[] = { 0x21, 0x03, 0x04, 0x06, 0x00, 0x16, 0x22, 0x25 };
@@ -60,12 +63,7 @@ CDisplay::~CDisplay(void)
  ******************************************************************************/
 bool CDisplay::DataInit(void)
 {
-    m_pFileNormal = new QFile("normal.txt");
-    m_pFileNormal->open(QIODevice::WriteOnly | QIODevice::Append);
-
-    m_pFilePrivate = new QFile("error.txt");
-    m_pFilePrivate->open(QIODevice::WriteOnly | QIODevice::Append);
-
+	OpenFiles();
     return true;
 } /*-------- end class CDisplay method DataInit -------- */
 
@@ -79,22 +77,7 @@ bool CDisplay::DataInit(void)
  ******************************************************************************/
 void CDisplay::DataExit(void)
 {
-    if (NULL != m_pFileNormal) {
-        if (m_pFileNormal->isOpen()) {
-            m_pFileNormal->close();
-        }
-        delete m_pFileNormal;
-        m_pFileNormal = NULL;
-    }
-
-    if (NULL != m_pFilePrivate) {
-        if (m_pFilePrivate->isOpen()) {
-            m_pFilePrivate->close();
-        }
-        delete m_pFilePrivate;
-        m_pFilePrivate = NULL;
-    }
-
+	CloseFiles();
 } /*-------- end class CDisplay method DataExit -------- */
 
 /*******************************************************************************
@@ -139,6 +122,16 @@ QString CDisplay::Convert(QByteArray ba)
     }
 
     if (m_pMainWindow->m_boxSave->isChecked()) {
+
+		if ( QDate::currentDate() != m_dayDate ) {
+			m_dayDate = QDate::currentDate();
+			m_nfile = m_dayDate.toString("yyyy-MM-dd_") + "normal.txt";
+			m_efile = m_dayDate.toString("yyyy-MM-dd_") + "error.txt";
+
+			CloseFiles();
+			OpenFiles();
+		}
+
         SaveNormal(str);
 
         switch (m_pMainWindow->m_comboMode->currentIndex()) {
@@ -212,6 +205,7 @@ QString CDisplay::GetTime(void)
  ******************************************************************************/
 bool CDisplay::SaveNormal(QString str)
 {
+
     if (!m_pFileNormal->isOpen()) {
         m_pFileNormal->open(QIODevice::WriteOnly | QIODevice::Append);
     }
@@ -419,3 +413,34 @@ bool CDisplay::IsCrcBuf(char *buf, unsigned int len)
 
     return true;
 } /*-------- end class CDisplay method IsPrivateBuf -------- */
+
+bool CDisplay::OpenFiles(void)
+{
+    m_pFileNormal = new QFile(m_nfile);
+    m_pFileNormal->open(QIODevice::WriteOnly | QIODevice::Append);
+
+    m_pFilePrivate = new QFile(m_efile);
+    m_pFilePrivate->open(QIODevice::WriteOnly | QIODevice::Append);
+
+	return true;
+}
+
+void CDisplay::CloseFiles(void)
+{
+    if (NULL != m_pFileNormal) {
+        if (m_pFileNormal->isOpen()) {
+            m_pFileNormal->close();
+        }
+        delete m_pFileNormal;
+        m_pFileNormal = NULL;
+    }
+
+    if (NULL != m_pFilePrivate) {
+        if (m_pFilePrivate->isOpen()) {
+            m_pFilePrivate->close();
+        }
+        delete m_pFilePrivate;
+        m_pFilePrivate = NULL;
+    }
+
+}

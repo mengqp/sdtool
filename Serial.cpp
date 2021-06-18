@@ -63,6 +63,7 @@ bool CSerial::Init(void)
         return false;
     }
 
+	printf("baud %d %d %d %d\n", GetBaudRate(), GetDataBits(), GetParity(), GetStopBits());
     m_Serial->setBaudRate( GetBaudRate() );      //波特率设置，我们设置为115200
     m_Serial->setDataBits( GetDataBits() );  //数据位设置，我们设置为8位数据位
     m_Serial->setParity( GetParity() );  //奇偶校验设置，我们设置为无校验
@@ -244,7 +245,7 @@ enum QSerialPort::DataBits CSerial::GetDataBits(void)
 // enum ParityType CSerial::GetParity(void)
 enum QSerialPort::Parity CSerial::GetParity(void)
 {
-    unsigned int uIndex = m_pMainWindow->m_comboStopBits->currentIndex();
+    unsigned int uIndex = m_pMainWindow->m_comboParity->currentIndex();
 
     switch ( uIndex )
     {
